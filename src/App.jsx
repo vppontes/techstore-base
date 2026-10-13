@@ -9,6 +9,7 @@ import Carrinho from './pages/Carrinho'
 import Estoque from './pages/Estoque'
 import { buscarProdutos } from './services/produtos'
 import { buscarClientes } from './services/clientes'
+import { podeAdicionarAoCarrinho, removerUmaUnidadeCarrinho } from './utils/carrinho'
 
 export default function App() {
   const [produtos, setProdutos] = useState([])
@@ -31,21 +32,16 @@ export default function App() {
   }, [])
 
   function adicionarAoCarrinho(produto) {
-    setCarrinho(carrinho.concat(produto))
+    if (!podeAdicionarAoCarrinho(carrinho, produto)) {
+      window.alert('Estoque indisponível para este produto.')
+      return
+    }
+
+    setCarrinho((anterior) => anterior.concat(produto))
   }
 
   function removerUmaUnidade(produtoId) {
-    // Remove só a primeira unidade encontrada do produto
-    let removido = false
-    setCarrinho(
-      carrinho.filter((produto) => {
-        if (!removido && produto.id === produtoId) {
-          removido = true
-          return false
-        }
-        return true
-      })
-    )
+    setCarrinho((anterior) => removerUmaUnidadeCarrinho(anterior, produtoId))
   }
 
   const clienteAtual = clientes.find((cliente) => cliente.id === clienteAtualId)

@@ -15,6 +15,8 @@ export default function Carrinho({ carrinho, produtos, clienteAtual, onAdicionar
   const totalComDesconto = cupomAplicado ? total * (1 - cupomAplicado.desconto) : total
 
   const sugestoes = produtos
+    .filter((produto) => Number(produto.estoque ?? 0) > 0)
+    .filter((produto) => Number.isFinite(Number(produto.price)) && Number(produto.price) > 0)
     .filter((produto) => !carrinho.find((item) => item.id === produto.id))
     .slice(0, 3)
 
@@ -58,12 +60,29 @@ export default function Carrinho({ carrinho, produtos, clienteAtual, onAdicionar
               </div>
               <div className="item-info">
                 <p className="item-titulo">{item.produto.title}</p>
-                <p className="item-preco">R$ {item.produto.price}</p>
+                <p className="item-preco">{formatarPreco(item.produto.price)}</p>
               </div>
-              <span className="item-quantidade">{item.quantidade} un.</span>
-              <button className="botao-texto" onClick={() => onRemover(item.produto.id)}>
-                Remover 1
-              </button>
+
+              <div className="controle-quantidade">
+                <button
+                  type="button"
+                  className="botao-quantidade"
+                  onClick={() => onRemover(item.produto.id)}
+                  aria-label={`Remover uma unidade de ${item.produto.title}`}
+                >
+                  −
+                </button>
+                <span className="item-quantidade">{item.quantidade} un.</span>
+                <button
+                  type="button"
+                  className="botao-quantidade"
+                  onClick={() => onAdicionar(item.produto)}
+                  aria-label={`Adicionar uma unidade de ${item.produto.title}`}
+                  disabled={item.quantidade >= Number(item.produto.estoque ?? 0)}
+                >
+                  +
+                </button>
+              </div>
             </li>
           ))}
         </ul>

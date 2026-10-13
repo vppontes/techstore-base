@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.0 (outubro de 2026)
+
+* Carrinho com controle de quantidade por item, incluindo adicionar e remover unidades.
+* Bloqueio de compra quando o estoque for atingido.
+* Exclusão de produtos sem estoque ou com preço inválido das listagens e sugestões.
+* Cupom `PRIMEIRACOMPRA` validado corretamente mesmo sem cliente carregado.
+
 ## 1.4.0 (setembro de 2026)
 
 * Novo visual do card de produto na lista, com avaliação e selos.

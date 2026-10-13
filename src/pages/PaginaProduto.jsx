@@ -1,8 +1,60 @@
+import { useState } from 'react'
 import { Link, useParams } from 'react-router'
+
+const STORAGE_KEY = 'techstore-lista-espera'
 
 export default function PaginaProduto({ produtos, onAdicionar }) {
   const { id } = useParams()
   const produto = produtos.find((item) => item.id === id)
+  const [nome, setNome] = useState('')
+  const [email, setEmail] = useState('')
+  const [mensagemInteresse, setMensagemInteresse] = useState('')
+  const [tipoMensagem, setTipoMensagem] = useState('')
+
+  function registrarInteresse(evento) {
+    evento.preventDefault()
+
+    const nomeFormatado = nome.trim()
+    const emailFormatado = email.trim()
+    const emailValido = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailFormatado)
+
+    if (!nomeFormatado) {
+      setTipoMensagem('erro')
+      setMensagemInteresse('Informe seu nome para entrar na lista de espera.')
+      return
+    }
+
+    if (!emailValido) {
+      setTipoMensagem('erro')
+      setMensagemInteresse('Informe um e-mail válido.')
+      return
+    }
+
+    const listaEspera = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')
+    const jaRegistrado = listaEspera.some(
+      (item) => item.id === produto.id && item.email.toLowerCase() === emailFormatado.toLowerCase(),
+    )
+
+    if (jaRegistrado) {
+      setTipoMensagem('sucesso')
+      setMensagemInteresse('Você já está na lista de espera deste produto.')
+      return
+    }
+
+    listaEspera.push({
+      id: produto.id,
+      nome: nomeFormatado,
+      email: emailFormatado.toLowerCase(),
+      produto: produto.title,
+      data: new Date().toISOString(),
+    })
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(listaEspera))
+    setNome('')
+    setEmail('')
+    setTipoMensagem('sucesso')
+    setMensagemInteresse('Cadastro realizado. Seu nome foi registrado na lista de espera.')
+  }
 
   if (!produto) {
     return (
@@ -17,6 +69,8 @@ export default function PaginaProduto({ produtos, onAdicionar }) {
 
   const relacionados = produtos
     .filter((item) => item.category === produto.category && item.id !== produto.id)
+    .filter((item) => Number(item.estoque ?? 0) > 0)
+    .filter((item) => Number.isFinite(Number(item.price)) && Number(item.price) > 0)
     .slice(0, 4)
 
   return (
@@ -40,6 +94,47 @@ export default function PaginaProduto({ produtos, onAdicionar }) {
           <p className="detalhe-preco">R$ {produto.price.toFixed(2).replace('.', ',')}</p>
           <p className="detalhe-descricao">{produto.description}</p>
           <p className="detalhe-estoque">{produto.estoque} unidades disponíveis</p>
+
+          {produto.estoque === 0 && (
+            <form className="form-notificacao" onSubmit={registrarInteresse}>
+              <p className="alerta-estoque">Produto esgotado no momento.</p>
+
+              <label htmlFor="nome-interesse" className="rotulo">
+                Nome
+              </label>
+              <div className="campo-notificacao">
+                <input
+                  id="nome-interesse"
+                  type="text"
+                  value={nome}
+                  onChange={(evento) => setNome(evento.target.value)}
+                  placeholder="Seu nome"
+                  className="campo-email"
+                />
+              </div>
+
+              <label htmlFor="email-interesse" className="rotulo">
+                E-mail
+              </label>
+              <div className="campo-notificacao">
+                <input
+                  id="email-interesse"
+                  type="email"
+                  value={email}
+                  onChange={(evento) => setEmail(evento.target.value)}
+                  placeholder="seu@email.com"
+                  className="campo-email"
+                />
+                <button type="submit" className="botao botao-secundario">
+                  Registrar interesse
+                </button>
+              </div>
+
+              {mensagemInteresse && (
+                <p className={`mensagem-notificacao ${tipoMensagem}`}>{mensagemInteresse}</p>
+              )}
+            </form>
+          )}
 
           <button
             className="botao botao-grande"
